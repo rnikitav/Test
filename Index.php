@@ -1,15 +1,12 @@
 <?php
-$currentPath = "/var/log/nginx/";
-//$commandPath = ".././log/nginx";
-$commandPath = ".././apache2/error_log";
-//$commandPath = ".././lib/postfix";
-//$commandPath = "/var/log/nginx";
-//$commandPath = "../../xdebug.log";
+$currentPath = "/var/www/";
+$commandPath = ".././log/nginx";
+
 
 
 
 /**
- * Функция realpath проверяет существует ли файл или директория
+ * Функция myRealPath проверяет существует ли файл или директория
  * Проверено на моей системе, где есть такой файл error_log
  * $currentPath = "/var/log/nginx/";
  * $commandPath = ".././apache2/error_log";
@@ -55,20 +52,41 @@ function prepareStringPath(string $path): string
  */
 function checkForAbsolutePath(string $path): bool
 {
-    if ($path[0] === DIRECTORY_SEPARATOR) {
+    if (substr($path, 0, 1) === DIRECTORY_SEPARATOR) {
         return true;
     }
     return false;
 }
 
-function myCd($currentPath, $commandPath)
+/** Возвращает строку пути
+ * Проверка на ../ выход выше пути не выполнена
+ * ошибку не будет выдавать
+ * @param $currentPath string
+ * @param $commandPath string
+ * @return string
+ */
+function myCd(string $currentPath, string $commandPath): string
 {
-    // РЕШЕНИЕ
-
-
-    $result = "/var/log/nginx";
-    return $result;
+    if (checkForAbsolutePath($commandPath)) {
+        return $commandPath;
+    }
+    $result = [];
+    $fullPath = $currentPath . $commandPath;
+    $explodeFullPath = array_filter(explode(DIRECTORY_SEPARATOR, $fullPath));
+    foreach ($explodeFullPath as $item){
+        if ($item == '.'){
+            continue;
+        }
+        if ($item == '..'){
+            array_pop($result);
+        } else {
+            array_push($result, $item);
+        }
+    }
+    return '/' .implode(DIRECTORY_SEPARATOR, $result);
 }
 
 
-echo myRealPath($currentPath, $commandPath);
+$preparedCurrentPath = prepareStringPath($currentPath);
+$preparedCommandPath = prepareStringPath($commandPath);
+echo myCd($preparedCurrentPath, $preparedCommandPath);
